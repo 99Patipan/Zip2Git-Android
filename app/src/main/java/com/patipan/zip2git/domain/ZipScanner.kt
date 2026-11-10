@@ -17,76 +17,88 @@ data class ZipLimits(
 }
 
 /**
- * Extracts a ZIP stream to [workDir] one file at a time (nothing is kept in memory),
- * enforcing size limits *while* reading, and computes each file's Git blob SHA-1.
+ * Shared by the ZIP and folder scanners: validates each path, copies content into [workDir]
+ * one file at a time (nothing is kept in memory) while enforcing size limits *during* the
+ * copy, and computes each file's Git blob SHA-1.
  */
+internal class ScanSession(private val workDir: File, private val limits: ZipLimits) {
+    private val result = linkedMapOf<String, ZipFileEntry>()
+    private val seenLower = HashSet<String>()
+    private var total = 0L
+    private var counter = 0
+    private val buf = ByteArray(16 * 1024)
+    var skipped = 0
+        private set
+
+    fun countSkipped() {
+        skipped++
+    }
+
+    /** Validates [rawPath]. Returns the normalized path, or null if the entry is skipped. */
+    fun prepare(rawPath: String): String? {
+        val path = ZipScanner.normalize(rawPath, limits)
+        if (ZipScanner.shouldSkip(path)) {
+            skipped++
+            return null
+        }
+        if (result.size >= limits.maxEntries) {
+            throw AppException(R.string.err_too_many_files, listOf(limits.maxEntries))
+        }
+        if (!seenLower.add(path.lowercase())) {
+            throw AppException(R.string.err_duplicate_path, listOf(path))
+        }
+        return path
+    }
+
+    /** Copies [input] (not closed here) into the cache and records it under [path]. */
+    fun store(path: String, input: InputStream) {
+        val tmp = File(workDir, "f${counter++}.bin")
+        var size = 0L
+        tmp.outputStream().buffered().use { out ->
+            while (true) {
+                val n = input.read(buf)
+                if (n < 0) break
+                size += n
+                if (size > limits.maxFileBytes) {
+                    throw AppException(R.string.err_file_too_large, listOf(limits.maxFileBytes / ZipLimits.MB, path))
+                }
+                if (total + size > limits.maxTotalBytes) {
+                    throw AppException(R.string.err_source_too_large, listOf(limits.maxTotalBytes / ZipLimits.MB))
+                }
+                out.write(buf, 0, n)
+            }
+        }
+        total += size
+        result[path] = ZipFileEntry(path, tmp, size, GitBlob.sha1(tmp, size))
+    }
+
+    fun finish(): ScanResult {
+        if (result.isEmpty()) throw AppException(R.string.err_source_empty)
+        return ScanResult(result, skipped, ZipScanner.commonRoot(result.keys))
+    }
+}
+
 object ZipScanner {
     fun scan(input: InputStream, workDir: File, limits: ZipLimits = ZipLimits()): ScanResult {
         workDir.deleteRecursively()
         workDir.mkdirs()
         try {
-            return doScan(input, workDir, limits)
+            val session = ScanSession(workDir, limits)
+            ZipInputStream(input).use { zip ->
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    if (!entry.isDirectory) {
+                        val path = session.prepare(entry.name)
+                        if (path != null) session.store(path, zip)
+                    }
+                    zip.closeEntry()
+                }
+            }
+            return session.finish()
         } catch (t: Throwable) {
             workDir.deleteRecursively()
             throw t
         }
-    }
-
-    private fun doScan(input: InputStream, workDir: File, limits: ZipLimits): ScanResult {
-        val result = linkedMapOf<String, ZipFileEntry>()
-        val seenLower = HashSet<String>()
-        var total = 0L
-        var skipped = 0
-        var counter = 0
-        val buf = ByteArray(16 * 1024)
-
-        ZipInputStream(input).use { zip ->
-            while (true) {
-                val entry = zip.nextEntry ?: break
-                if (entry.isDirectory) {
-                    zip.closeEntry()
-                    continue
-                }
-                val path = normalize(entry.name, limits)
-                if (shouldSkip(path)) {
-                    skipped++
-                    zip.closeEntry()
-                    continue
-                }
-                if (result.size >= limits.maxEntries) {
-                    throw AppException(R.string.err_too_many_files, listOf(limits.maxEntries))
-                }
-                if (!seenLower.add(path.lowercase())) {
-                    throw AppException(R.string.err_duplicate_path, listOf(path))
-                }
-
-                val tmp = File(workDir, "f${counter++}.bin")
-                var size = 0L
-                tmp.outputStream().buffered().use { out ->
-                    while (true) {
-                        val n = zip.read(buf)
-                        if (n < 0) break
-                        size += n
-                        if (size > limits.maxFileBytes) {
-                            throw AppException(
-                                R.string.err_file_too_large,
-                                listOf(limits.maxFileBytes / ZipLimits.MB, path),
-                            )
-                        }
-                        if (total + size > limits.maxTotalBytes) {
-                            throw AppException(R.string.err_zip_too_large, listOf(limits.maxTotalBytes / ZipLimits.MB))
-                        }
-                        out.write(buf, 0, n)
-                    }
-                }
-                total += size
-                result[path] = ZipFileEntry(path, tmp, size, GitBlob.sha1(tmp, size))
-                zip.closeEntry()
-            }
-        }
-
-        if (result.isEmpty()) throw AppException(R.string.err_zip_empty)
-        return ScanResult(result, skipped, commonRoot(result.keys))
     }
 
     /** Rejects absolute paths, `..`, drive letters and control characters. */

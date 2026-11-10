@@ -81,13 +81,13 @@ class ZipScannerTest {
     }
 
     @Test fun enforcesTotalLimit() {
-        expectError(R.string.err_zip_too_large) {
+        expectError(R.string.err_source_too_large) {
             scan(zip("a" to "x".repeat(8), "b" to "y".repeat(8)), ZipLimits(maxTotalBytes = 12))
         }
     }
 
     @Test fun emptyZipIsRejected() {
-        expectError(R.string.err_zip_empty) { scan(zip()) }
+        expectError(R.string.err_source_empty) { scan(zip()) }
     }
 
     @Test fun skipRulesDoNotHitNormalFiles() {

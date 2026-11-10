@@ -11,7 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.patipan.zip2git.R
 import com.patipan.zip2git.data.GitHubApi
 import com.patipan.zip2git.data.TokenStore
-import com.patipan.zip2git.data.ZipImporter
+import com.patipan.zip2git.data.SourceImporter
 import com.patipan.zip2git.domain.AppException
 import com.patipan.zip2git.domain.Differ
 import com.patipan.zip2git.domain.FileChange
@@ -37,9 +37,10 @@ data class UiState(
     val branches: List<String> = emptyList(),
     val selectedRepo: RepoInfo? = null,
     val selectedBranch: String = "",
-    val zipName: String? = null,
-    val zipFileCount: Int = 0,
-    val zipTotalBytes: Long = 0,
+    val sourceName: String? = null,
+    val sourceIsFolder: Boolean = false,
+    val sourceFileCount: Int = 0,
+    val sourceTotalBytes: Long = 0,
     val commonRoot: String? = null,
     val stripRoot: Boolean = false,
     val changes: List<FileChange> = emptyList(),
@@ -62,7 +63,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val tokenStore = TokenStore(app)
     private var api: GitHubApi? = null
-    private var zip: ScanResult? = null
+    private var source: ScanResult? = null
     private var remote: RemoteSnapshot? = null
 
     init {
@@ -76,7 +77,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
-        ZipImporter.clear(getApplication<Application>())
+        SourceImporter.clear(getApplication<Application>())
     }
 
     // ---------- simple setters ----------
@@ -103,12 +104,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun disconnect() {
         if (state.busy) return
         api = null
-        zip = null
+        source = null
         remote = null
         val app = getApplication<Application>()
         viewModelScope.launch(Dispatchers.IO) {
             tokenStore.clear()
-            ZipImporter.clear(app)
+            SourceImporter.clear(app)
         }
         state = UiState(status = str(R.string.status_token_removed))
     }
@@ -150,29 +151,47 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         update { copy(selectedBranch = branch) }
     }
 
-    // ---------- ZIP ----------
+    // ---------- source (ZIP file or folder) ----------
 
     fun onZipPicked(uri: Uri) {
+        val app = getApplication<Application>()
+        loadSource(
+            isFolder = false,
+            load = { SourceImporter.importZip(app, uri) },
+            name = { SourceImporter.zipName(app, uri) },
+        )
+    }
+
+    fun onFolderPicked(uri: Uri) {
+        val app = getApplication<Application>()
+        loadSource(
+            isFolder = true,
+            load = { SourceImporter.importFolder(app, uri) },
+            name = { SourceImporter.folderName(app, uri) },
+        )
+    }
+
+    private fun loadSource(isFolder: Boolean, load: () -> ScanResult, name: () -> String) {
         launchBusy {
-            val app = getApplication<Application>()
-            // The scan wipes the previous extraction, so forget it first.
-            zip = null
+            // The import wipes the previous extraction, so forget it first.
+            source = null
             clearComparison()
             update {
-                copy(zipName = null, zipFileCount = 0, zipTotalBytes = 0, commonRoot = null, stripRoot = false,
-                    status = str(R.string.status_scanning))
+                copy(sourceName = null, sourceIsFolder = isFolder, sourceFileCount = 0, sourceTotalBytes = 0,
+                    commonRoot = null, stripRoot = false, status = str(R.string.status_scanning))
             }
-            val scan = safely { withContext(Dispatchers.IO) { ZipImporter.import(app, uri) } }
+            val scan = safely { withContext(Dispatchers.IO) { load() } }
                 .getOrElse { fail(it); return@launchBusy }
-            val name = withContext(Dispatchers.IO) { ZipImporter.displayName(app, uri) }
-            zip = scan
+            val displayName = withContext(Dispatchers.IO) { name() }
+            source = scan
             val status = if (scan.skipped > 0) {
-                str(R.string.status_zip_ready_skipped, scan.entries.size, scan.skipped)
+                str(R.string.status_source_ready_skipped, scan.entries.size, scan.skipped)
             } else {
-                str(R.string.status_zip_ready, scan.entries.size)
+                str(R.string.status_source_ready, scan.entries.size)
             }
             update {
-                copy(zipName = name, zipFileCount = scan.entries.size, zipTotalBytes = scan.entries.values.sumOf { it.size },
+                copy(sourceName = displayName, sourceFileCount = scan.entries.size,
+                    sourceTotalBytes = scan.entries.values.sumOf { it.size },
                     commonRoot = scan.commonRoot, status = status)
             }
             refreshStripDefault()
@@ -181,14 +200,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** GitHub "Download ZIP" wraps everything in `<repo>-<branch>/`; strip it by default in that case. */
     private fun refreshStripDefault() {
-        val root = zip?.commonRoot
+        val root = source?.commonRoot
         val repo = state.selectedRepo
         val guess = root != null && repo != null && root.startsWith(repo.name + "-", ignoreCase = true)
         update { copy(stripRoot = guess) }
     }
 
     private fun effectiveEntries(): Map<String, ZipFileEntry> {
-        val z = zip ?: return emptyMap()
+        val z = source ?: return emptyMap()
         val root = z.commonRoot
         return if (state.stripRoot && root != null) ZipScanner.stripRoot(z.entries, root) else z.entries
     }

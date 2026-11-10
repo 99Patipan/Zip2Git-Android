@@ -60,8 +60,11 @@ import com.patipan.zip2git.domain.FileChange.Kind
 @Composable
 fun MainScreen(vm: MainViewModel) {
     val s = vm.state
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val zipPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) vm.onZipPicked(uri)
+    }
+    val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) vm.onFolderPicked(uri)
     }
     val visible = remember(s.changes, s.showUnchanged) {
         if (s.showUnchanged) s.changes else s.changes.filter { it.kind != Kind.UNCHANGED }
@@ -137,23 +140,40 @@ fun MainScreen(vm: MainViewModel) {
                     )
                 }
             }
-            // 03 zip
+            // 03 source (ZIP file or folder)
             item {
-                CardBlock(stringResource(R.string.card_zip), Icons.Default.FolderZip) {
-                    OutlinedButton(
-                        onClick = { picker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !s.busy,
-                    ) {
-                        Icon(Icons.Default.UploadFile, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(if (s.zipName == null) R.string.btn_choose_zip else R.string.btn_choose_another))
+                CardBlock(stringResource(R.string.card_source), Icons.Default.FolderZip) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { zipPicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+                            modifier = Modifier.weight(1f),
+                            enabled = !s.busy,
+                        ) {
+                            Icon(Icons.Default.UploadFile, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.btn_pick_zip))
+                        }
+                        OutlinedButton(
+                            onClick = { folderPicker.launch(null) },
+                            modifier = Modifier.weight(1f),
+                            enabled = !s.busy,
+                        ) {
+                            Icon(Icons.Default.Folder, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.btn_pick_folder))
+                        }
                     }
-                    if (s.zipName == null) {
-                        Text(stringResource(R.string.no_zip), color = Muted)
+                    if (s.sourceName == null) {
+                        Text(stringResource(R.string.no_source), color = Muted)
                     } else {
-                        Text(s.zipName, color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(stringResource(R.string.zip_summary, s.zipFileCount, s.zipTotalBytes / 1024), color = Muted)
+                        Text(
+                            stringResource(
+                                if (s.sourceIsFolder) R.string.source_label_folder else R.string.source_label_zip,
+                                s.sourceName,
+                            ),
+                            color = Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(stringResource(R.string.source_summary, s.sourceFileCount, s.sourceTotalBytes / 1024), color = Muted)
                     }
                     if (s.commonRoot != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -169,7 +189,7 @@ fun MainScreen(vm: MainViewModel) {
                     Button(
                         onClick = vm::compare,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !s.busy && s.zipName != null && s.selectedRepo != null && s.selectedBranch.isNotBlank(),
+                        enabled = !s.busy && s.sourceName != null && s.selectedRepo != null && s.selectedBranch.isNotBlank(),
                     ) {
                         Icon(Icons.Default.FindReplace, null)
                         Spacer(Modifier.width(8.dp))
