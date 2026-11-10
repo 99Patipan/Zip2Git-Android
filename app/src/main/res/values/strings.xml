@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zip2Git</string>
+    <string name="app_subtitle">ZIP → GitHub</string>
+
+    <string name="card_connection">01  GitHub connection</string>
+    <string name="card_destination">02  Destination</string>
+    <string name="card_zip">03  Source ZIP</string>
+    <string name="card_compare">04  Smart comparison</string>
+    <string name="card_push">05  Commit and push</string>
+
+    <string name="label_token">Personal Access Token</string>
+    <string name="label_repo">Repository</string>
+    <string name="label_branch">Branch</string>
+    <string name="label_commit_message">Commit message</string>
+    <string name="select_repo">Select repository</string>
+    <string name="select_branch">Select branch</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="btn_choose_zip">Choose ZIP</string>
+    <string name="btn_choose_another">Choose another ZIP</string>
+    <string name="btn_compare">Compare with GitHub</string>
+    <string name="btn_push">Push %1$d changes</string>
+    <string name="signed_in_as">Signed in as @%1$s</string>
+    <string name="no_zip">No ZIP selected</string>
+    <string name="zip_summary">%1$d files · %2$d KB</string>
+    <string name="strip_root">Strip root folder “%1$s”</string>
+    <string name="show_unchanged">Show unchanged files</string>
+    <string name="confirm_delete">I confirm deleting files missing from the ZIP from the target branch</string>
+    <string name="warn_mass_delete">Warning: %1$d of %2$d files on the branch will be deleted. Check that the ZIP root folder matches the repository.</string>
+    <string name="push_hint">Changes are sent as one Git commit. Deletions require separate confirmation.</string>
+
+    <string name="status_start">Connect GitHub to get started</string>
+    <string name="status_connected">Connected as @%1$s</string>
+    <string name="status_token_removed">Token removed</string>
+    <string name="status_loaded_branches">Loaded %1$d branches</string>
+    <string name="status_scanning">Scanning ZIP…</string>
+    <string name="status_zip_ready">ZIP ready: %1$d files</string>
+    <string name="status_zip_ready_skipped">ZIP ready: %1$d files (%2$d system files skipped)</string>
+    <string name="status_choose_first">Choose a repository, branch and ZIP first</string>
+    <string name="status_comparing">Comparing with GitHub…</string>
+    <string name="status_compare_done">Comparison complete: %1$d changes</string>
+    <string name="status_nothing_to_push">Nothing to push</string>
+    <string name="status_pushing">Uploading %1$d of %2$d files…</string>
+    <string name="status_committing">Creating commit…</string>
+    <string name="status_push_done">Push complete · %1$s</string>
+
+    <string name="err_unknown">Something went wrong</string>
+    <string name="err_network">Network error: %1$s</string>
+    <string name="err_token_not_saved">Connected, but the token could not be stored securely. You will need to sign in again next time.</string>
+    <string name="err_empty_message">Commit message cannot be empty</string>
+    <string name="err_delete_confirm">Confirm the deletions before pushing</string>
+    <string name="err_open_zip">Could not open the selected file</string>
+    <string name="err_unsafe_path">Unsafe path in ZIP: %1$s</string>
+    <string name="err_path_too_long">Path too long: %1$s</string>
+    <string name="err_duplicate_path">Duplicate path in ZIP (names differing only by case count as duplicates): %1$s</string>
+    <string name="err_too_many_files">ZIP has more than %1$d files</string>
+    <string name="err_file_too_large">A file exceeds %1$d MB: %2$s</string>
+    <string name="err_zip_too_large">ZIP expands beyond the %1$d MB safety limit</string>
+    <string name="err_zip_empty">The ZIP contains no usable files</string>
+    <string name="err_unauthorized">Token is invalid or expired</string>
+    <string name="err_forbidden">GitHub refused the request: %1$s</string>
+    <string name="err_not_found">Not found, or the token has no access to this repository</string>
+    <string name="err_empty_repo">The repository or branch has no commits yet. Create the first commit on GitHub, then try again.</string>
+    <string name="err_http">GitHub error %1$d: %2$s</string>
+    <string name="err_tree_too_large">A single directory on the branch is too large to list through the API</string>
+    <string name="err_stale_branch">The branch changed after the comparison. Compare again before pushing.</string>
+</resources>

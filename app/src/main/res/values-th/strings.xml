@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zip2Git</string>
+    <string name="app_subtitle">ZIP → GitHub</string>
+
+    <string name="card_connection">01  เชื่อมต่อ GitHub</string>
+    <string name="card_destination">02  ปลายทาง</string>
+    <string name="card_zip">03  ไฟล์ ZIP ต้นทาง</string>
+    <string name="card_compare">04  เปรียบเทียบอัจฉริยะ</string>
+    <string name="card_push">05  Commit และ Push</string>
+
+    <string name="label_token">Personal Access Token</string>
+    <string name="label_repo">Repository</string>
+    <string name="label_branch">Branch</string>
+    <string name="label_commit_message">ข้อความ commit</string>
+    <string name="select_repo">เลือก repository</string>
+    <string name="select_branch">เลือก branch</string>
+    <string name="btn_connect">เชื่อมต่อ</string>
+    <string name="btn_disconnect">ตัดการเชื่อมต่อ</string>
+    <string name="btn_choose_zip">เลือกไฟล์ ZIP</string>
+    <string name="btn_choose_another">เลือก ZIP ไฟล์อื่น</string>
+    <string name="btn_compare">เปรียบเทียบกับ GitHub</string>
+    <string name="btn_push">Push %1$d การเปลี่ยนแปลง</string>
+    <string name="signed_in_as">ลงชื่อเข้าใช้เป็น @%1$s</string>
+    <string name="no_zip">ยังไม่ได้เลือก ZIP</string>
+    <string name="zip_summary">%1$d ไฟล์ · %2$d KB</string>
+    <string name="strip_root">ตัดโฟลเดอร์ราก “%1$s” ออก</string>
+    <string name="show_unchanged">แสดงไฟล์ที่ไม่เปลี่ยนแปลง</string>
+    <string name="confirm_delete">ฉันยืนยันที่จะลบไฟล์ที่ไม่มีใน ZIP ออกจาก branch ปลายทาง</string>
+    <string name="warn_mass_delete">คำเตือน: จะลบไฟล์ %1$d จากทั้งหมด %2$d ไฟล์บน branch ตรวจสอบว่าโฟลเดอร์รากของ ZIP ตรงกับ repository</string>
+    <string name="push_hint">การเปลี่ยนแปลงจะถูกส่งเป็น Git commit เดียว และการลบไฟล์ต้องยืนยันแยกต่างหาก</string>
+
+    <string name="status_start">เชื่อมต่อ GitHub เพื่อเริ่มต้น</string>
+    <string name="status_connected">เชื่อมต่อแล้วในชื่อ @%1$s</string>
+    <string name="status_token_removed">ลบ token แล้ว</string>
+    <string name="status_loaded_branches">โหลด %1$d branch แล้ว</string>
+    <string name="status_scanning">กำลังสแกน ZIP…</string>
+    <string name="status_zip_ready">ZIP พร้อมแล้ว: %1$d ไฟล์</string>
+    <string name="status_zip_ready_skipped">ZIP พร้อมแล้ว: %1$d ไฟล์ (ข้ามไฟล์ระบบ %2$d ไฟล์)</string>
+    <string name="status_choose_first">เลือก repository, branch และ ZIP ก่อน</string>
+    <string name="status_comparing">กำลังเปรียบเทียบกับ GitHub…</string>
+    <string name="status_compare_done">เปรียบเทียบเสร็จแล้ว: %1$d การเปลี่ยนแปลง</string>
+    <string name="status_nothing_to_push">ไม่มีอะไรให้ push</string>
+    <string name="status_pushing">กำลังอัปโหลด %1$d จาก %2$d ไฟล์…</string>
+    <string name="status_committing">กำลังสร้าง commit…</string>
+    <string name="status_push_done">Push สำเร็จ · %1$s</string>
+
+    <string name="err_unknown">เกิดข้อผิดพลาดบางอย่าง</string>
+    <string name="err_network">เครือข่ายขัดข้อง: %1$s</string>
+    <string name="err_token_not_saved">เชื่อมต่อแล้ว แต่เก็บ token อย่างปลอดภัยไม่สำเร็จ คราวหน้าต้องเข้าสู่ระบบใหม่</string>
+    <string name="err_empty_message">ข้อความ commit ต้องไม่ว่าง</string>
+    <string name="err_delete_confirm">กรุณายืนยันการลบไฟล์ก่อน push</string>
+    <string name="err_open_zip">เปิดไฟล์ที่เลือกไม่ได้</string>
+    <string name="err_unsafe_path">พบ path ที่ไม่ปลอดภัยใน ZIP: %1$s</string>
+    <string name="err_path_too_long">path ยาวเกินไป: %1$s</string>
+    <string name="err_duplicate_path">พบ path ซ้ำใน ZIP (ชื่อที่ต่างกันแค่ตัวพิมพ์เล็ก/ใหญ่ถือว่าซ้ำ): %1$s</string>
+    <string name="err_too_many_files">ZIP มีไฟล์เกิน %1$d ไฟล์</string>
+    <string name="err_file_too_large">มีไฟล์ใหญ่เกิน %1$d MB: %2$s</string>
+    <string name="err_zip_too_large">ZIP เมื่อแตกแล้วเกินขีดจำกัดความปลอดภัย %1$d MB</string>
+    <string name="err_zip_empty">ZIP ไม่มีไฟล์ที่ใช้งานได้</string>
+    <string name="err_unauthorized">Token ไม่ถูกต้องหรือหมดอายุ</string>
+    <string name="err_forbidden">GitHub ปฏิเสธคำขอ: %1$s</string>
+    <string name="err_not_found">ไม่พบ หรือ token ไม่มีสิทธิ์เข้าถึง repository นี้</string>
+    <string name="err_empty_repo">repository หรือ branch นี้ยังไม่มี commit ให้สร้าง commit แรกบน GitHub ก่อน แล้วลองใหม่</string>
+    <string name="err_http">GitHub error %1$d: %2$s</string>
+    <string name="err_tree_too_large">ไดเรกทอรีเดียวบน branch ใหญ่เกินกว่าจะอ่านผ่าน API</string>
+    <string name="err_stale_branch">Branch เปลี่ยนไปหลังการเปรียบเทียบ กรุณาเปรียบเทียบใหม่ก่อน push</string>
+</resources>
