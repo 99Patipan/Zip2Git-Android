@@ -36,8 +36,9 @@ data class FileChange(
 
 data class RemoteEntry(val path: String, val mode: String, val sha: String)
 
-/** Branch state captured at compare time; [headSha] is verified again before pushing. */
-data class RemoteSnapshot(val headSha: String, val entries: Map<String, RemoteEntry>)
+/** Branch state captured at compare time; the head is verified again before pushing. */
+/** [headSha] is null for an empty repository (no commits yet). */
+data class RemoteSnapshot(val headSha: String?, val entries: Map<String, RemoteEntry>)
 
 data class RepoInfo(val fullName: String, val defaultBranch: String) {
     val owner: String get() = fullName.substringBefore('/')

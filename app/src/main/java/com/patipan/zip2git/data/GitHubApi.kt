@@ -130,6 +130,44 @@ class GitHubApi(private val token: String) {
         return commit
     }
 
+    /**
+     * Pushes into a repository with no commits. Git Data API calls fail on an empty repo
+     * (409 "Git Repository is empty"), so the smallest file is created through the Contents API,
+     * which makes the repository's default branch; everything else follows as one normal commit
+     * on top of it. Result: two commits. Always targets the repository's default branch.
+     */
+    suspend fun pushToEmpty(
+        owner: String,
+        repo: String,
+        branch: String,
+        message: String,
+        additions: List<PushFile>,
+        onProgress: (done: Int, total: Int) -> Unit,
+    ): String {
+        // The repository may have received a commit since it was selected.
+        if (branches(owner, repo).isNotEmpty()) throw AppException(R.string.err_stale_branch)
+        val first = additions.minByOrNull { it.size } ?: throw AppException(R.string.err_source_empty)
+        val total = additions.size
+
+        val encoded = withContext(Dispatchers.IO) { Base64.encodeToString(first.file.readBytes(), Base64.NO_WRAP) }
+        val created = JSONObject(
+            execute(
+                "$BASE/repos/$owner/$repo/contents/${Uri.encode(first.path, "/")}",
+                "PUT",
+                // No "branch": on an empty repo this creates the default branch.
+                JSONObject().put("message", message).put("content", encoded),
+            ).body,
+        )
+        val firstCommit = created.getJSONObject("commit").getString("sha")
+        onProgress(1, total)
+
+        val rest = additions.filter { it !== first }
+        if (rest.isEmpty()) return firstCommit
+        return push(owner, repo, branch, message, firstCommit, rest, emptyList()) { done, _ ->
+            onProgress(done + 1, total)
+        }
+    }
+
     // ---------- internals ----------
 
     private suspend fun uploadBlob(owner: String, repo: String, f: PushFile): String =

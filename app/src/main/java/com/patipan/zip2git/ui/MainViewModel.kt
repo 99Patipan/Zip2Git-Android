@@ -35,6 +35,7 @@ data class UiState(
     val username: String = "",
     val repos: List<RepoInfo> = emptyList(),
     val branches: List<String> = emptyList(),
+    val repoEmpty: Boolean = false,
     val selectedRepo: RepoInfo? = null,
     val selectedBranch: String = "",
     val sourceName: String? = null,
@@ -133,12 +134,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val repo = state.repos.firstOrNull { it.fullName == fullName } ?: return
         val client = api ?: return
         clearComparison()
-        update { copy(selectedRepo = repo, branches = emptyList(), selectedBranch = "") }
+        update { copy(selectedRepo = repo, branches = emptyList(), selectedBranch = "", repoEmpty = false) }
         refreshStripDefault()
         launchBusy {
             val list = safely { client.branches(repo.owner, repo.name) }.getOrElse { fail(it); return@launchBusy }
             if (list.isEmpty()) {
-                update { copy(status = str(R.string.err_empty_repo)) }
+                // Empty repository: the first push creates the default branch.
+                val newBranch = repo.defaultBranch.ifBlank { "main" }
+                update {
+                    copy(branches = listOf(newBranch), selectedBranch = newBranch, repoEmpty = true,
+                        status = str(R.string.note_empty_repo, newBranch))
+                }
                 return@launchBusy
             }
             val chosen = list.firstOrNull { it == repo.defaultBranch } ?: list.first()
@@ -225,8 +231,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 return@launchBusy
             }
             update { copy(status = str(R.string.status_comparing)) }
+            val emptyRepo = state.repoEmpty
             val (snapshot, changes) = safely {
-                val snap = client.snapshot(repo.owner, repo.name, branch)
+                val snap = if (emptyRepo) RemoteSnapshot(null, emptyMap()) else client.snapshot(repo.owner, repo.name, branch)
                 snap to withContext(Dispatchers.Default) { Differ.diff(local, snap.entries) }
             }.getOrElse { fail(it); return@launchBusy }
 
@@ -249,14 +256,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val client = api
             val repo = state.selectedRepo
             val branch = state.selectedBranch
-            val head = remote?.headSha
+            val snap = remote
             val pending = state.changes.filter { it.kind != Kind.UNCHANGED }
             val message = state.commitMessage.trim()
 
-            if (client == null || repo == null || head == null || branch.isBlank()) {
+            if (client == null || repo == null || snap == null || branch.isBlank()) {
                 update { copy(status = str(R.string.status_choose_first)) }
                 return@launchBusy
             }
+            val head = snap.headSha // null = empty repository
             if (pending.isEmpty()) {
                 update { copy(status = str(R.string.status_nothing_to_push)) }
                 return@launchBusy
@@ -278,21 +286,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (additions.isNotEmpty()) {
                 update { copy(progress = 0f, status = str(R.string.status_pushing, 0, additions.size)) }
             }
+            val onProgress: (Int, Int) -> Unit = { done, total ->
+                update {
+                    copy(
+                        progress = done.toFloat() / total,
+                        status = if (done >= total) str(R.string.status_committing)
+                        else str(R.string.status_pushing, done, total),
+                    )
+                }
+            }
             val sha = safely {
-                client.push(repo.owner, repo.name, branch, message, head, additions, deletions) { done, total ->
-                    update {
-                        copy(
-                            progress = done.toFloat() / total,
-                            status = if (done >= total) str(R.string.status_committing)
-                            else str(R.string.status_pushing, done, total),
-                        )
-                    }
+                if (head == null) {
+                    client.pushToEmpty(repo.owner, repo.name, branch, message, additions, onProgress)
+                } else {
+                    client.push(repo.owner, repo.name, branch, message, head, additions, deletions, onProgress)
                 }
             }.getOrElse { fail(it); return@launchBusy }
 
             remote = null
             update {
-                copy(changes = emptyList(), confirmDeletes = false, massDeleteWarning = null,
+                copy(changes = emptyList(), confirmDeletes = false, massDeleteWarning = null, repoEmpty = false,
                     status = str(R.string.status_push_done, sha.take(7)))
             }
         }

@@ -59,7 +59,7 @@
     <string name="err_unauthorized">Token ไม่ถูกต้องหรือหมดอายุ</string>
     <string name="err_forbidden">GitHub ปฏิเสธคำขอ: %1$s</string>
     <string name="err_not_found">ไม่พบ หรือ token ไม่มีสิทธิ์เข้าถึง repository นี้</string>
-    <string name="err_empty_repo">repository หรือ branch นี้ยังไม่มี commit ให้สร้าง commit แรกบน GitHub ก่อน แล้วลองใหม่</string>
+    <string name="err_empty_repo">repository ยังว่างอยู่หรือเพิ่งมีการเปลี่ยนแปลง กรุณาเลือกใหม่ เปรียบเทียบ แล้ว push อีกครั้ง</string>
     <string name="err_http">GitHub error %1$d: %2$s</string>
     <string name="err_tree_too_large">ไดเรกทอรีเดียวบน branch ใหญ่เกินกว่าจะอ่านผ่าน API</string>
     <string name="err_stale_branch">Branch เปลี่ยนไปหลังการเปรียบเทียบ กรุณาเปรียบเทียบใหม่ก่อน push</string>
@@ -69,4 +69,5 @@
     <string name="source_label_folder">โฟลเดอร์: %1$s</string>
     <string name="err_read_file">อ่านไม่ได้: %1$s</string>
     <string name="err_folder_too_deep">โฟลเดอร์ซ้อนลึกเกินไป</string>
+    <string name="note_empty_repo">repository ว่างเปล่า: การ push ครั้งแรกจะสร้าง branch “%1$s” โดยใช้ 2 commit</string>
 </resources>

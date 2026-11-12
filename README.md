@@ -11,6 +11,7 @@ Android app that compares a ZIP archive with a GitHub branch and pushes the dete
 - Root-folder handling for GitHub "Download ZIP" archives (`repo-main/…`): auto-detected, toggle to strip
 - Smart comparison by Git blob SHA-1: ADD / MODIFY / DELETE / UNCHANGED; existing file modes (e.g. executable `100755`) are preserved
 - Safety: mass-delete warning, explicit delete confirmation, and the branch head is re-checked before pushing (aborts if someone committed in between)
+- Empty repositories are supported: the smallest file is created through the Contents API (which creates the default branch), the rest follows as a second commit
 - Push: parallel blob upload with progress, retry with backoff on rate limits / 5xx, then tree → commit → fast-forward ref update
 - State lives in a `ViewModel`: rotation no longer cancels a running push or loses the comparison
 - Unit tests for Git SHA-1, ZIP and folder scanning, limits/path rules and diffing; CI runs them before building
@@ -33,6 +34,6 @@ Create a fine-grained Personal Access Token limited to the target repositories w
 ## Known limits
 - Individual files ≤ 25 MB, whole source ≤ 100 MB, ≤ 20 000 files.
 - Android 11+ does not allow picking a storage root or the Download folder itself; pick a sub-folder. Very large folders can take a while to read (SAF is slower than plain file access).
-- Empty repositories (no commit yet) and creating new branches are not supported.
+- Creating new branches is not supported.
 - Git LFS pointers and submodules are not handled specially; renames appear as delete + add.
 - Before publishing to Google Play, check the target API level Play currently requires and update Compose BOM / AGP / Kotlin.

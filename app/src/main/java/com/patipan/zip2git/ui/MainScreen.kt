@@ -171,6 +171,13 @@ fun MainScreen(vm: MainViewModel) {
                         onSelect = vm::selectBranch,
                         enabled = s.branches.isNotEmpty() && !s.busy,
                     )
+                    if (s.repoEmpty) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            Icon(Icons.Default.Info, null, tint = Accent, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.note_empty_repo, s.selectedBranch), color = Accent, fontSize = 12.sp)
+                        }
+                    }
                 }
             }
             // 03 source (ZIP file or folder)

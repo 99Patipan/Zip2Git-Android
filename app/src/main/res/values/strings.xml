@@ -59,7 +59,7 @@
     <string name="err_unauthorized">Token is invalid or expired</string>
     <string name="err_forbidden">GitHub refused the request: %1$s</string>
     <string name="err_not_found">Not found, or the token has no access to this repository</string>
-    <string name="err_empty_repo">The repository or branch has no commits yet. Create the first commit on GitHub, then try again.</string>
+    <string name="err_empty_repo">The repository is still empty or was just changed. Select it again, compare, then push.</string>
     <string name="err_http">GitHub error %1$d: %2$s</string>
     <string name="err_tree_too_large">A single directory on the branch is too large to list through the API</string>
     <string name="err_stale_branch">The branch changed after the comparison. Compare again before pushing.</string>
@@ -69,4 +69,5 @@
     <string name="source_label_folder">Folder: %1$s</string>
     <string name="err_read_file">Could not read: %1$s</string>
     <string name="err_folder_too_deep">The folder is nested too deeply</string>
+    <string name="note_empty_repo">Empty repository: the first push creates branch “%1$s” using two commits</string>
 </resources>
